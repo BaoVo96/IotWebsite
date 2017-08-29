@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang=''>
+<head>
+   <meta charset='utf-8'>
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link rel="stylesheet" href="css/styles.css">
+<!--   <link rel="stylesheet" href="css/setting.css">  -->  
+   <script src="src/navigationBar.js"></script>
+   <title>IOT Project Website</title>
+</head>
+
+<!-- Body part-->
+<body>
+<!--Navigation bar-->
+<div id='cssmenu'>
+	<ul>
+	   <li id="cssmenuHome" class='active'><a href="javascript:showHome()">Home</a></li>
+	   <li id="cssmenuSetting"><a href="javascript:showSetting()">Setting</a></li>
+	   <li id="cssmenuAbout"><a href="javascript:showAbout()">About</a></li>
+	</ul>
+</div>
+
+<div id="home">
+	<!--Information part (on the left)-->
+    <div id="left">
+		<h1> Information</h1>
+		<!--Create a table. every element(temperature, humidity..) will be treated like a cell of table-->
+		<table>
+		
+			<!--Temperature-->
+			<tr> 
+				<th><img src="images/temperature.png" width="100%" height="100%"/></th>
+			</tr>
+			
+			<tr>
+				<th>Temperature</th>
+			</tr>
+			
+			<tr>
+				<th><output name="temperature"></output></th>
+			</tr>
+			
+			<!--Humidity-->
+			<tr> 
+				<th><img src="images/humidity.png" width="100%" height="100%"/></th>
+			</tr>
+			
+			<tr>
+				<th>Humidity</th>
+			</tr>
+			
+			<tr>
+				<th><output name="humidity"></output></th>
+			</tr>
+			
+			<!--Gas-->
+			<tr> 
+				<th><img src="images/gas.png" width="100%" height="100%"/></th>
+			</tr>
+			
+			<tr>
+				<th>Gas</th>
+			</tr>
+			
+			<tr>
+				<th><output name="gas"></output></th>
+			</tr>
+			
+			<!--Last synchronize-->
+			<tr>
+				<th><br><br><img src="images/synch.png" width="30%" height="35"/></th>
+			</tr>
+			
+			<tr>
+				<th><span style="font-size: 12px">Last synchronize</span></th>
+			</tr>
+			
+		</table>
+		
+    </div>
+	
+	
+	
+	
+	
+	<!--Control part (on the right)-->
+    <div id="right">
+		<h1> Control </h1>
+		
+		<table>
+			<!--Fan status-->
+			<tr>
+				<th>Fan status <br></th>
+			</tr>
+			
+			<tr>
+				<th><img src="images/fan.png" width="100%" height="100%"/></th>
+				<th>&emsp;</th><th>&emsp;</th><th>&emsp;</th><th>&emsp;</th>
+				<th>&emsp;</th><th>&emsp;
+				<th>
+					<div class="switch demo3">
+						<input type="checkbox">
+						<label><i></i></label>
+					</div>
+				</th>
+			</tr>
+		
+			<!--Light status-->
+			<tr>
+				<th>Light status</th>
+			</tr>
+			
+			<tr>
+				<th><img src="images/light.png" width="100%" height="100%"/></th>
+				<th>&emsp;</th><th>&emsp;</th><th>&emsp;</th><th>&emsp;</th>
+				<th>&emsp;</th><th>&emsp;
+				<th>
+					<div class="switch demo3">
+						<input type="checkbox">
+						<label><i></i></label>
+					</div>
+				</th>
+			</tr>
+			
+			<!--Mistorizer status-->
+			<tr>
+				<th>Mistorizer status </tr>
+			</th>
+			
+			<tr>
+				<th><img src="images/mistorizer.png" width="100%" height="100%"/></th>
+				<!--Blank space-->
+				<th>&emsp;</th><th>&emsp;</th><th>&emsp;</th><th>&emsp;</th>
+				<th>&emsp;</th><th>&emsp;
+				
+				<th>
+					<div class="switch demo3">
+						<input type="checkbox">
+						<label><i></i></label>
+					</div>
+				</th>
+			</tr>
+
+		</table>
+    </div>
+	
+	
+	<!--Create footer for index-->
+	<div id="footer">
+		<h2> <span style="color: white">IOT Project Website<span></h2>
+    </div>
+	
+</div>
+
+
+
+<!--Setting section-->
+<div id="setting" style = "display:none">
+
+
+
+</div>
+
+
+
+<!-- about section-->
+<div id="about" style = "display:none" style = "about">
+	
+	<br> <br>
+	<h1> Sinh viên thực hiện: <br></h1>
+	<h3> Trần Phạm Duy - 1410629 <br> </h3>
+	<h3> Võ Công Gia Bảo - 1410248</h3>
+	<br> <br>
+	<h2> Giáo viên hướng dẫn: </h2>
+	<h3> Phan Trọng Nhân</h3>
+		
+</div>
+
+
+
+</body>
+</html>
