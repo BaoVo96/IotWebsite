@@ -22,29 +22,29 @@ This utility can be used to test the Eclipse Paho MQTT Javascript client.
 // Create a client instance
 client = null;
 connected = false;
-
-
+subcribed = false;
 // Things to do as soon as the page loads
-document.getElementById("clientIdInput").value = 'js-utility-' + makeid();
+//document.getElementById("clientIdInput").value = 'js-utility-' + makeid();
+enableCheckbox();
 
 // called when the client connects
 function onConnect(context) {
   // Once a connection has been made, make a subscription and send a message.
   console.log("Client Connected");
   var statusSpan = document.getElementById("connectionStatus");
-  statusSpan.innerHTML = "Connected to: " + context.invocationContext.host + ':' + context.invocationContext.port + context.invocationContext.path + ' as ' + context.invocationContext.clientId;
+  statusSpan.innerHTML = "Connected";
   connected = true;
   setFormEnabledState(true);
-
-
 }
 
 function onFail(context) {
   console.log("Failed to connect");
   var statusSpan = document.getElementById("connectionStatus");
-  statusSpan.innerHTML = "Failed to connect: " + context.errorMessage;
+  statusSpan.innerHTML = "Failed to connect";
   connected = false;
-  setFormEnabledState(false);
+  subcribed = false;
+  document.getElementById("clientConnectButton").innerHTML = "Connect";
+  disableCheckbox();
 }
 
 // called when the client loses its connection
@@ -52,42 +52,33 @@ function onConnectionLost(responseObject) {
   if (responseObject.errorCode !== 0) {
     console.log("Connection Lost: " + responseObject.errorMessage);
   }
+  var statusSpan = document.getElementById("connectionStatus");
+  statusSpan.innerHTML = "Connection Lost";
   connected = false;
+  subcribed = false;
+  disableCheckbox();
 }
 
 // called when a message arrives
 function onMessageArrived(message) {
   console.log('Message Recieved: Topic: ', message.destinationName, '. Payload: ', message.payloadString, '. QoS: ', message.qos);
   console.log(message);
-  var messageTime = new Date().toISOString();
-  // Insert into History Table
-  var table = document.getElementById("incomingMessageTable").getElementsByTagName('tbody')[0];
-  var row = table.insertRow(0);
-  row.insertCell(0).innerHTML = message.destinationName;
-  row.insertCell(1).innerHTML = safe_tags_regex(message.payloadString);
-  row.insertCell(2).innerHTML = messageTime;
-  row.insertCell(3).innerHTML = message.qos;
+  
+  var arr = message.payloadString.split("|");
+
+  document.getElementById("outputTemperature").value = arr[0];
+  document.getElementById("outputHumidity").value = arr[1];
+  document.getElementById("outputGas").value = arr[2];
+
+  document.getElementById("fanStatus").checked = parseInt(arr[3]);
+  document.getElementById("lightStatus").checked = parseInt(arr[4]);
+  document.getElementById("mostorizerStatus").checked = parseInt(arr[5]);
 
 
-  if(!document.getElementById(message.destinationName)){
-      var lastMessageTable = document.getElementById("lastMessageTable").getElementsByTagName('tbody')[0];
-      var newlastMessageRow = lastMessageTable.insertRow(0);
-      newlastMessageRow.id = message.destinationName;
-      newlastMessageRow.insertCell(0).innerHTML = message.destinationName;
-      newlastMessageRow.insertCell(1).innerHTML = safe_tags_regex(message.payloadString);
-      newlastMessageRow.insertCell(2).innerHTML = messageTime;
-      newlastMessageRow.insertCell(3).innerHTML = message.qos;
 
-  } else {
-      // Update Last Message Table
-      var lastMessageRow = document.getElementById(message.destinationName);
-      lastMessageRow.id = message.destinationName;
-      lastMessageRow.cells[0].innerHTML = message.destinationName;
-      lastMessageRow.cells[1].innerHTML = safe_tags_regex(message.payloadString);
-      lastMessageRow.cells[2].innerHTML = messageTime;
-      lastMessageRow.cells[3].innerHTML = message.qos;
-  }
-
+  var date = new Date();
+  var messageTime = "" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + "  " + date.getDate() + "/" + date.getMonth() + "/" + date.getYear();
+  document.getElementById("outputLastSynchronize").value = messageTime;
 }
 
 function connectionToggle(){
@@ -97,28 +88,36 @@ function connectionToggle(){
   } else {
     connect();
   }
+}
 
+function subscribeToggle(){
 
+  if(subcribed){
+    unsubscribe();
+    
+  } else {
+    subscribe();
+  }
 }
 
 
 function connect(){
-    var hostname = document.getElementById("hostInput").value;
-    var port = document.getElementById("portInput").value;
-    var clientId = document.getElementById("clientIdInput").value;
 
-    var path = document.getElementById("pathInput").value;
-    var user = document.getElementById("userInput").value;
-    var pass = document.getElementById("passInput").value;
-    var keepAlive = Number(document.getElementById("keepAliveInput").value);
-    var timeout = Number(document.getElementById("timeoutInput").value);
-    var tls = document.getElementById("tlsInput").checked;
-    var cleanSession = document.getElementById("cleanSessionInput").checked;
-    var lastWillTopic = document.getElementById("lwtInput").value;
-    var lastWillQos = Number(document.getElementById("lwQosInput").value);
-    var lastWillRetain = document.getElementById("lwRetainInput").checked;
-    var lastWillMessage = document.getElementById("lwMInput").value;
-
+  // Those variable below can't be fixed by user
+    var hostname = "m11.cloudmqtt.com";
+    var port = "36416";
+    var clientId = "IOT-Website";
+    var path = "";
+    var user = 'gbmswwpl';
+    var pass = 'jZf8eSGw39X4';
+    var keepAlive = 60;
+    var timeout = 3;
+    var tls = true;
+    var cleanSession = true;
+    var lastWillTopic = "";
+    var lastWillQos = 0;
+    var lastWillRetain = false;
+    var lastWillMessage = "";
 
     if(path.length > 0){
       client = new Paho.MQTT.Client(hostname, Number(port), path, clientId);
@@ -152,28 +151,26 @@ function connect(){
       options.password = pass;
     }
 
-    if(lastWillTopic.length > 0){
-      var lastWillMessage = new Paho.MQTT.Message(lastWillMessage);
-      lastWillMessage.destinationName = lastWillTopic;
-      lastWillMessage.qos = lastWillQos;
-      lastWillMessage.retained = lastWillRetain;
-      options.willMessage = lastWillMessage;
-    }
-
     // connect the client
     client.connect(options);
     var statusSpan = document.getElementById("connectionStatus");
     statusSpan.innerHTML = 'Connecting...';
+    
+    enableCheckbox();
+    //var msg = "synchronize"
 }
 
 function disconnect(){
     console.info('Disconnecting from Server');
     client.disconnect();
     var statusSpan = document.getElementById("connectionStatus");
-    statusSpan.innerHTML = 'Connection - Disconnected.';
+    statusSpan.innerHTML = 'Disconnected';
     connected = false;
-    setFormEnabledState(false);
-
+    subcribed = false;
+    document.getElementById("clientConnectButton").innerHTML = "Connect";
+    document.getElementById("subscribeButton").innerHTML = "Subscribe";
+    document.getElementById("subscriptionStatus").innerHTML = "Unsubscribing";
+    disableCheckbox();
 }
 
 // Sets various form controls to either enabled or disabled
@@ -184,100 +181,145 @@ function setFormEnabledState(enabled){
       document.getElementById("clientConnectButton").innerHTML = "Disconnect";
     } else {
       document.getElementById("clientConnectButton").innerHTML = "Connect";
-    }
-    document.getElementById("hostInput").disabled = enabled;
-    document.getElementById("portInput").disabled = enabled;
-    document.getElementById("clientIdInput").disabled = enabled;
-    document.getElementById("pathInput").disabled = enabled;
-    document.getElementById("userInput").disabled = enabled;
-    document.getElementById("passInput").disabled = enabled;
-    document.getElementById("keepAliveInput").disabled = enabled;
-    document.getElementById("timeoutInput").disabled = enabled;
-    document.getElementById("tlsInput").disabled = enabled;
-    document.getElementById("cleanSessionInput").disabled = enabled;
-    document.getElementById("lwtInput").disabled = enabled;
-    document.getElementById("lwQosInput").disabled = enabled;
-    document.getElementById("lwRetainInput").disabled = enabled;
-    document.getElementById("lwMInput").disabled = enabled;
-
-    // Publish Panel Elements
-    document.getElementById("publishTopicInput").disabled = !enabled;
-    document.getElementById("publishQosInput").disabled = !enabled;
-    document.getElementById("publishMessageInput").disabled = !enabled;
-    document.getElementById("publishButton").disabled = !enabled;
-    document.getElementById("publishRetainInput").disabled = !enabled;
-
-    // Subscription Panel Elements
-    document.getElementById("subscribeTopicInput").disabled = !enabled;
-    document.getElementById("subscribeQosInput").disabled = !enabled;
-    document.getElementById("subscribeButton").disabled = !enabled;
-    document.getElementById("unsubscribeButton").disabled = !enabled;
+    }    
 
 }
 
-function publish(){
-    var topic = document.getElementById("publishTopicInput").value;
-    var qos = document.getElementById("publishQosInput").value;
-    var message = document.getElementById("publishMessageInput").value;
-    var retain = document.getElementById("publishRetainInput").checked
+function publish(aMessage){
+
+    var topic = "command";
+    var qos = 0;
+    var message = aMessage;
+    var retain = true;
     console.info('Publishing Message: Topic: ', topic, '. QoS: ' + qos + '. Message: ', message);
     message = new Paho.MQTT.Message(message);
     message.destinationName = topic;
-    message.qos = Number(qos);
+    message.qos = qos;
     message.retained = retain;
     client.send(message);
 }
 
 
 function subscribe(){
-    var topic = document.getElementById("subscribeTopicInput").value;
-    var qos = document.getElementById("subscribeQosInput").value;
-    console.info('Subscribing to: Topic: ', topic, '. QoS: ', qos);
-    client.subscribe(topic, {qos: Number(qos)});
+    if(connected == true){
+        var topic = "event";
+        var qos = 0;
+        console.info('Subscribing to: Topic: ', topic, '. QoS: ', qos);
+        client.subscribe(topic, {qos: Number(qos)});
+        subcribed = true;
+    	publish("synchronize");
+        document.getElementById("subscribeButton").innerHTML = "Unsubscribe";
+        document.getElementById("subscriptionStatus").innerHTML = "Subscribing";
+    }else{
+        alert("You must connect to server first!");
+    }
 }
 
 function unsubscribe(){
-    var topic = document.getElementById("subscribeTopicInput").value;
+    var topic = "event";
     console.info('Unsubscribing from ', topic);
     client.unsubscribe(topic, {
          onSuccess: unsubscribeSuccess,
          onFailure: unsubscribeFailure,
          invocationContext: {topic : topic}
      });
+    
+
 }
 
 
 function unsubscribeSuccess(context){
     console.info('Successfully unsubscribed from ', context.invocationContext.topic);
+    subcribed = false;
+    document.getElementById("subscribeButton").innerHTML = "Subscribe";
+    document.getElementById("subscriptionStatus").innerHTML = "Unsubscribing";
 }
 
 function unsubscribeFailure(context){
     console.info('Failed to  unsubscribe from ', context.invocationContext.topic);
 }
 
-function clearHistory(){
-    var table = document.getElementById("incomingMessageTable");
-    //or use :  var table = document.all.tableid;
-    for(var i = table.rows.length - 1; i > 0; i--)
-    {
-        table.deleteRow(i);
+// // Just in case someone sends html
+// function safe_tags_regex(str) {
+//    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// }
+
+// function makeid()
+// {
+//     var text = "";
+//     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+//     for( var i=0; i < 5; i++ )
+//         text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+//     return text;
+// }
+
+
+function changeStatus(){
+    var fanStatus = document.getElementById("fanStatus").checked;
+    var lightStatus = document.getElementById("lightStatus").checked;
+    var mostorizerStatus = document.getElementById("mostorizerStatus").checked;
+
+    var message = "";
+
+    if(fanStatus == true){
+      message = message + "1|";
+    }else{
+      message = message + "0|";
     }
 
+    if(lightStatus == true){
+      message = message + "1|";
+    }else{
+      message = message + "0|";
+    }
+
+    if(mostorizerStatus == true){
+      message = message + "1";
+    }else{
+      message = message + "0";
+    }
+
+    publish(message);
 }
 
 
-// Just in case someone sends html
-function safe_tags_regex(str) {
-   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function enableCheckbox() {
+    document.getElementById("fanStatus").disabled = false;
+    document.getElementById("lightStatus").disabled = false;
+    document.getElementById("mostorizerStatus").disabled = false;
 }
 
-function makeid()
-{
-    var text = "";
-    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+function disableCheckbox() {
+    document.getElementById("fanStatus").disabled = true;
+    document.getElementById("lightStatus").disabled = true;
+    document.getElementById("mostorizerStatus").disabled = true;
+}
 
-    for( var i=0; i < 5; i++ )
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
 
-    return text;
+function setInterval() {
+  if(connected == true){
+    var intervalTime = prompt("Please enter interval time (second):", "10");
+    if (intervalTime == null || intervalTime == "") {
+        //alert("Interval time is empty");
+    } else {
+      if(isNaN(intervalTime)){
+        alert("Interval time must be a number");
+      }else{
+        publish("interval=" + intervalTime);
+      }
+    }
+  }else{
+    alert("You must connect to server first!");
+  }
+}
+
+
+function synchronize(){
+    if(connected == true){
+        publish("synchronize");
+    }else{
+        alert("You must connect to server first!");
+    }
 }
